@@ -1,0 +1,6 @@
+{
+  "name": "UpFrica Bot Network",
+  "description": "The Router to Global Capital for AI Bots & DeFi Capital Routing. Unlimited API for $660T Markets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
