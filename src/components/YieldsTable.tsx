@@ -24,7 +24,17 @@ export const YieldsTable: React.FC = () => {
       const res = await fetch('/api/v1/yields');
       if (res.ok) {
         const data = await res.json();
-        setPools(data.pools || []);
+        const raw = Array.isArray(data) ? data : (data.pools || []);
+        setPools(raw.map((p: any) => ({
+          pool: p.pool || p.protocol || 'pool',
+          project: p.protocol || p.project || 'Protocol',
+          symbol: p.symbol || p.category || 'USD',
+          chain: p.chain || p.category || 'Multi',
+          tvlUsd: p.tvl_usd ?? p.tvlUsd ?? 0,
+          apy: p.apy || 0,
+          apyBase: p.apyBase || p.apy || 0,
+          apyReward: p.apyReward || 0
+        })));
       }
     } catch (err) {
       console.error('Error fetching yields:', err);

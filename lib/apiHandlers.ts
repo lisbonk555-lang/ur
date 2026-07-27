@@ -5,16 +5,17 @@ export const PLATFORM_NAME = "UpFrica Bot Network";
 export const DOMAIN_NAME = "UpFrica.africa";
 
 // Hardcoded initial 8 institutional yield pools
-export const HARDCODED_YIELDS = [
-  { pool: "aave-v3-usdc", chain: "Ethereum", project: "Aave V3", symbol: "USDC", tvlUsd: 1420500000, apy: 8.42, apyBase: 8.10, apyReward: 0.32 },
-  { pool: "compound-v3-usdt", chain: "Arbitrum", project: "Compound V3", symbol: "USDT", tvlUsd: 890200000, apy: 9.15, apyBase: 8.90, apyReward: 0.25 },
-  { pool: "ondo-usdy", chain: "Ethereum", project: "Ondo Finance", symbol: "USDY", tvlUsd: 520000000, apy: 5.20, apyBase: 5.20, apyReward: 0.00 },
-  { pool: "ethena-susde", chain: "Ethereum", project: "Ethena", symbol: "sUSDe", tvlUsd: 3100000000, apy: 14.80, apyBase: 14.80, apyReward: 0.00 },
-  { pool: "blackrock-buidl", chain: "Ethereum", project: "Securitize / BlackRock", symbol: "BUIDL", tvlUsd: 610000000, apy: 5.12, apyBase: 5.12, apyReward: 0.00 },
-  { pool: "makerdao-susds", chain: "Ethereum", project: "Sky / MakerDAO", symbol: "sUSDS", tvlUsd: 1850000000, apy: 6.50, apyBase: 6.50, apyReward: 0.00 },
-  { pool: "morpho-blue-usdc", chain: "Base", project: "Morpho Blue", symbol: "USDC", tvlUsd: 430000000, apy: 11.35, apyBase: 11.00, apyReward: 0.35 },
-  { pool: "upfrica-rwa-vault", chain: "Polygon", project: "UpFrica RWA", symbol: "USDC-AFR", tvlUsd: 180000000, apy: 12.80, apyBase: 12.80, apyReward: 0.00 }
+export const HARDCODED = [
+  { protocol: "UpFrica Treasury Vault", apy: 8.0, category: "RWA", tvl_usd: 50000000 },
+  { protocol: "US Treasury Bills", apy: 4.8, category: "RWA", tvl_usd: 200000 },
+  { protocol: "Private Credit", apy: 9.2, category: "RWA", tvl_usd: 75000000 },
+  { protocol: "Real Estate", apy: 7.1, category: "RWA", tvl_usd: 120000 },
+  { protocol: "ETH Liquid Staking", apy: 3.4, category: "DeFi", tvl_usd: 3000000000 },
+  { protocol: "USDC Lending Aave", apy: 5.1, category: "DeFi", tvl_usd: 1500000 },
+  { protocol: "BTC Yield Solv", apy: 2.8, category: "DeFi", tvl_usd: 800000 },
+  { protocol: "Money Market Fund", apy: 5.0, category: "RWA", tvl_usd: 400000 },
 ];
+export const HARDCODED_YIELDS = HARDCODED;
 
 export async function handleWellKnown() {
   return {
@@ -44,10 +45,10 @@ export async function handleHealth() {
 export async function handleYields() {
   const cached = await redis.get("cache:yields");
   if (cached && Array.isArray(cached) && cached.length > 0) {
-    return { cached: true, timestamp: Date.now(), pools: cached };
+    return cached;
   }
 
-  let llamaPools: any[] = [];
+  let llama_data: any[] = [];
   try {
     const res = await fetch("https://yields.llama.fi/pools", {
       headers: { 'Accept': 'application/json' },
@@ -56,15 +57,16 @@ export async function handleYields() {
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.data)) {
-        llamaPools = data.data.slice(0, 25).map((p: any) => ({
+        llama_data = data.data.slice(0, 25).map((p: any) => ({
+          protocol: p.project ? `${p.project} (${p.symbol})` : (p.chain + "-" + p.symbol),
+          apy: Number((p.apy || 0).toFixed(2)),
+          category: "DeFi",
+          tvl_usd: p.tvlUsd || 0,
           pool: p.pool || p.chain + "-" + p.symbol,
           chain: p.chain || "Multi",
           project: p.project || "DeFi",
           symbol: p.symbol || "USD",
-          tvlUsd: p.tvlUsd || 0,
-          apy: Number((p.apy || 0).toFixed(2)),
-          apyBase: Number((p.apyBase || 0).toFixed(2)),
-          apyReward: Number((p.apyReward || 0).toFixed(2))
+          tvlUsd: p.tvlUsd || 0
         }));
       }
     }
@@ -72,20 +74,9 @@ export async function handleYields() {
     console.warn("[Yields] Llama API request failed, serving verified hardcoded pools:", err);
   }
 
-  // Merge llama pools with hardcoded 8 institutional pools
-  const poolMap = new Map();
-  for (const item of HARDCODED_YIELDS) {
-    poolMap.set(item.pool, item);
-  }
-  for (const item of llamaPools) {
-    if (!poolMap.has(item.pool)) {
-      poolMap.set(item.pool, item);
-    }
-  }
-
-  const merged = Array.from(poolMap.values());
-  await redis.set("cache:yields", merged, { ex: 60 });
-  return { cached: false, timestamp: Date.now(), pools: merged };
+  const result = [...HARDCODED, ...llama_data];
+  await redis.set("cache:yields", result, { ex: 60 });
+  return result;
 }
 
 export async function handleRegisterBot(body: { bot_id?: string; name?: string; referrer_bot_id?: string }) {
