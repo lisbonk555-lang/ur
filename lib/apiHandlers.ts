@@ -44,39 +44,23 @@ export async function handleHealth() {
 
 export async function handleYields() {
   const cached = await redis.get("cache:yields");
-  if (cached && Array.isArray(cached) && cached.length > 0) {
-    return cached;
-  }
+  if (cached) return cached;
 
-  let llama_data: any[] = [];
+  let llama: any[] = [];
   try {
-    const res = await fetch("https://yields.llama.fi/pools", {
-      headers: { 'Accept': 'application/json' },
-      signal: AbortSignal.timeout(4000)
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && Array.isArray(data.data)) {
-        llama_data = data.data.slice(0, 25).map((p: any) => ({
-          protocol: p.project ? `${p.project} (${p.symbol})` : (p.chain + "-" + p.symbol),
-          apy: Number((p.apy || 0).toFixed(2)),
-          category: "DeFi",
-          tvl_usd: p.tvlUsd || 0,
-          pool: p.pool || p.chain + "-" + p.symbol,
-          chain: p.chain || "Multi",
-          project: p.project || "DeFi",
-          symbol: p.symbol || "USD",
-          tvlUsd: p.tvlUsd || 0
-        }));
-      }
-    }
-  } catch (err) {
-    console.warn("[Yields] Llama API request failed, serving verified hardcoded pools:", err);
-  }
+    const r = await fetch('https://yields.llama.fi/pools');
+    const json = await r.json();
+    llama = json.data?.slice(0, 15).map((p: any) => ({
+      protocol: p.project,
+      apy: p.apy,
+      category: p.category,
+      tvl_usd: p.tvlUsd
+    })) || [];
+  } catch {}
 
-  const result = [...HARDCODED, ...llama_data];
-  await redis.set("cache:yields", result, { ex: 60 });
-  return result;
+  const data = [...HARDCODED, ...llama];
+  await redis.set('cache:yields', data, { ex: 60 });
+  return data;
 }
 
 export async function handleRegisterBot(body: { bot_id?: string; name?: string; referrer_bot_id?: string }) {

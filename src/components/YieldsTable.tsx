@@ -139,7 +139,7 @@ export const YieldsTable: React.FC = () => {
               </tr>
             ) : (
               filteredPools.map((p, idx) => (
-                <tr key={p.pool || idx} className="hover:bg-zinc-800/40 transition-colors">
+                <tr key={`yield-pool-${p.pool}-${p.project}-${p.chain}-${idx}`} className="hover:bg-zinc-800/40 transition-colors">
                   <td className="py-3 font-sans font-medium text-white flex items-center gap-2">
                     {p.project}
                     {p.project.includes('UpFrica') && (
