@@ -7,6 +7,7 @@ import { YieldsTable } from './components/YieldsTable';
 import { LeaderboardView } from './components/LeaderboardView';
 import { DocsView } from './components/DocsView';
 import { BotDashboardView } from './components/BotDashboardView';
+import { BrainsHub } from './components/BrainsHub';
 import { FEE_WALLET } from '../lib/fee';
 import { Terminal, Trophy, ShieldCheck, ArrowRight, Zap, Globe, Layers, Cpu, Check, Copy } from 'lucide-react';
 
@@ -113,6 +114,11 @@ export default function App() {
 
             {/* Live Network Analytics */}
             <StatsBar />
+
+            {/* Automated Brain Engines Hub */}
+            <div id="brains-hub-section">
+              <BrainsHub />
+            </div>
 
             {/* Interactive Route Quote Playground */}
             <QuotePlayground />

@@ -73,6 +73,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
           </button>
 
           <button
+            onClick={() => {
+              if (currentPath !== '/') {
+                navigate('/');
+              }
+              setTimeout(() => {
+                const el = document.getElementById('brains-hub-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 hover:bg-emerald-900/40 transition-all cursor-pointer"
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            <span>Automated Brains</span>
+          </button>
+
+          <button
             onClick={() => navigate('/leaderboard')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               currentPath === '/leaderboard' 

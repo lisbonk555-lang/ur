@@ -12,7 +12,14 @@ import {
   handleRegisterBot,
   handleStats,
   handleWellKnown,
-  handleYields
+  handleYields,
+  handleBrainsStatus,
+  handleOmniMeshOpportunities,
+  handleOmniMeshExecute,
+  handleGetOmniMeshHistory,
+  handleNexusSentryRiskMatrix,
+  handleNexusSentryExecute,
+  handleGetNexusSentryHistory
 } from './lib/apiHandlers.js';
 
 async function startServer() {
@@ -34,13 +41,59 @@ async function startServer() {
     res.json(data);
   });
 
-  // 3. Yields aggregator
+  // 3. Automated Brain Status
+  app.get('/api/v1/brains/status', async (req, res) => {
+    const data = await handleBrainsStatus();
+    res.json(data);
+  });
+
+  // 4. OmniMesh Brain Routes
+  app.get('/api/v1/brains/omnimesh/opportunities', async (req, res) => {
+    const data = await handleOmniMeshOpportunities();
+    res.json(data);
+  });
+
+  app.post('/api/v1/brains/omnimesh/execute', async (req, res) => {
+    const result = await handleOmniMeshExecute(req.body || {});
+    if (result.error) {
+      res.status(result.status || 400).json({ error: result.error });
+    } else {
+      res.json(result.data);
+    }
+  });
+
+  app.get('/api/v1/brains/omnimesh/history', async (req, res) => {
+    const history = await handleGetOmniMeshHistory();
+    res.json(history);
+  });
+
+  // 5. Nexus Sentry Brain Routes
+  app.get('/api/v1/brains/nexussentry/risk-matrix', async (req, res) => {
+    const data = await handleNexusSentryRiskMatrix();
+    res.json(data);
+  });
+
+  app.post('/api/v1/brains/nexussentry/execute', async (req, res) => {
+    const result = await handleNexusSentryExecute(req.body || {});
+    if (result.error) {
+      res.status(result.status || 400).json({ error: result.error });
+    } else {
+      res.json(result.data);
+    }
+  });
+
+  app.get('/api/v1/brains/nexussentry/history', async (req, res) => {
+    const history = await handleGetNexusSentryHistory();
+    res.json(history);
+  });
+
+  // 6. Yields aggregator
   app.get('/api/v1/yields', async (req, res) => {
     const data = await handleYields();
     res.json(data);
   });
 
-  // 4. Register Bot
+  // 7. Register Bot
   app.post('/api/v1/register_bot', async (req, res) => {
     const result = await handleRegisterBot(req.body || {});
     if (result.error) {
@@ -50,13 +103,13 @@ async function startServer() {
     }
   });
 
-  // 5. Get Bots
+  // 8. Get Bots
   app.get('/api/v1/bots', async (req, res) => {
     const list = await handleGetBots();
     res.json(list);
   });
 
-  // 6. Quote
+  // 9. Quote
   app.post('/api/v1/quote', async (req, res) => {
     const result = await handleQuote(req.body || {});
     if (result.error) {
@@ -66,7 +119,7 @@ async function startServer() {
     }
   });
 
-  // 7. Execute
+  // 10. Execute
   app.post('/api/v1/execute', async (req, res) => {
     const result = await handleExecute(req.body || {});
     if (result.error) {
@@ -76,25 +129,25 @@ async function startServer() {
     }
   });
 
-  // 8. Leaderboard
+  // 11. Leaderboard
   app.get('/api/v1/leaderboard', async (req, res) => {
     const list = await handleLeaderboard();
     res.json(list);
   });
 
-  // 9. Stats
+  // 12. Stats
   app.get('/api/v1/stats', async (req, res) => {
     const stats = await handleStats();
     res.json(stats);
   });
 
-  // 10. Referrals
+  // 13. Referrals
   app.get('/api/v1/referrals/:bot_id', async (req, res) => {
     const ref = await handleReferrals(req.params.bot_id);
     res.json(ref);
   });
 
-  // 11. OpenAPI Docs
+  // 14. OpenAPI Docs
   app.get('/api/v1/docs', (req, res) => {
     const docs = handleDocs();
     res.json(docs);
